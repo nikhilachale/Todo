@@ -1,55 +1,38 @@
 import { PrismaClient } from "@prisma/client";
+import express, { Express, Request, Response } from "express";
+import addRouter from "./todos";
+import updateRouter from "./update"
+
 
 const prisma = new PrismaClient();
+const app: Express = express();
+app.use(express.json());
 
-// Function to insert a user into the database
-async function insertUser(email: string, password: string, fname: string, lname: string) {
-  try {
-    const res = await prisma.nikhil.create({
-      data: {
-        email,
-        password,
-        firstName: fname,
-        lastName: lname,
-      },
-      select: {
-        id: true,
-        password: true,
-        firstName: true,
-        lastName: true,
-      },
-    });
-    console.log("Inserted User:", res);
-  } catch (err) {
-    console.error("Error inserting user:", err);
-  }
-}
-
-//insertUser("nikhil2@gmail.com", "123456", "nikhil2", "achale2");
-
-// Interface for update parameters
-interface UpdateParams {
-  firstName: string;
-  lastName: string;
-}
-
-// Function to update a user's first and last name by email
-async function updateUser(email: string, { firstName, lastName }: UpdateParams) {
-  try {
-    const res = await prisma.nikhil.update({
-      where: { email },
-      data: {
-        firstName,
-        lastName,
-      },
-    });
-    console.log("Updated User:", res);
-  } catch (err) {
-    console.error("Error updating user:", err);
-  }
-}
-
-updateUser("nikhil2@gmail.com", {
-  firstName: "nikhil2",
-  lastName: "achale2",
+// Root route
+app.get("/", (req: Request, res: Response) => {
+  res.send("Hey, you connected!");
 });
+//route to diffrent file
+app.use("/add", addRouter);
+app.use("/update", updateRouter);
+
+
+// Start the server
+app.listen(3000, () => {
+  console.log("Hey, server running on port 3000");
+});
+
+// Function to connect to the database
+async function connect() {
+  try {
+    await prisma.$connect();
+    console.log("Connected to the database");
+  } catch (err) {
+    console.error("Unable to connect to the database:", err);
+  }
+}
+
+// Connect to the database on startup
+(async () => {
+  await connect();
+})();

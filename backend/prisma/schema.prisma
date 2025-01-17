@@ -22,12 +22,10 @@ model Nikhil {
 }
 
 model Todo {
-  id         Int      @id @default(autoincrement())
-  title String
-  done Boolean @default(false)
-  description  String?
-  userid Int
+  tid      Int      @id @default(autoincrement())
+  id       DateTime
+  task     String
+  complete Boolean  @default(false)
 }
-
 
 

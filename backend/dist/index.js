@@ -8,51 +8,36 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
+const express_1 = __importDefault(require("express"));
+const todos_1 = __importDefault(require("./todos"));
+const update_1 = __importDefault(require("./update"));
 const prisma = new client_1.PrismaClient();
-function insertUser(email, password, fname, lname) {
+const app = (0, express_1.default)();
+app.use(express_1.default.json());
+app.get("/", (req, res) => {
+    res.send("Hey, you connected!");
+});
+app.use("/add", todos_1.default);
+app.use("/update", update_1.default);
+app.listen(3000, () => {
+    console.log("Hey, server running on port 3000");
+});
+function connect() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const res = yield prisma.nikhil.create({
-                data: {
-                    email,
-                    password,
-                    firstName: fname,
-                    lastName: lname,
-                },
-                select: {
-                    id: true,
-                    password: true,
-                    firstName: true,
-                    lastName: true,
-                },
-            });
-            console.log("Inserted User:", res);
+            yield prisma.$connect();
+            console.log("Connected to the database");
         }
         catch (err) {
-            console.error("Error inserting user:", err);
+            console.error("Unable to connect to the database:", err);
         }
     });
 }
-function updateUser(email_1, _a) {
-    return __awaiter(this, arguments, void 0, function* (email, { firstName, lastName }) {
-        try {
-            const res = yield prisma.nikhil.update({
-                where: { email },
-                data: {
-                    firstName,
-                    lastName,
-                },
-            });
-            console.log("Updated User:", res);
-        }
-        catch (err) {
-            console.error("Error updating user:", err);
-        }
-    });
-}
-updateUser("nikhil2@gmail.com", {
-    firstName: "nikhil2",
-    lastName: "achale2",
-});
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    yield connect();
+}))();

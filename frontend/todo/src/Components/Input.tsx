@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useTodoContext } from "../../contexts/todoContext";
+import { useTodoContext } from "../contexts/todoContext";
+
 
 function Input() {
   const [task, setTask] = useState("");
