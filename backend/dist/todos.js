@@ -15,19 +15,18 @@ const zod_1 = require("zod");
 const prisma = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
 const Todo = zod_1.z.object({
-    tid: zod_1.z.number().int(),
+    tid: zod_1.z.number().optional(),
     id: zod_1.z.string(),
     task: zod_1.z.string().min(1),
     complete: zod_1.z.boolean(),
 });
 router.get("/", (req, res) => {
-    res.send("hey you are in add now");
+    res.send("You are in the add route now!");
 });
 router.post("/todos", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, task, complete } = req.body;
     try {
         const newTodo = yield insertTodo(id, task, complete);
-        console.log("Result:", newTodo);
         res.status(201).json(newTodo);
     }
     catch (err) {
@@ -61,7 +60,6 @@ function insertTodo(id, task, complete) {
                     complete: true,
                 },
             });
-            console.log("Inserted Todo:", newTodo);
             return newTodo;
         }
         catch (err) {

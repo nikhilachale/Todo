@@ -11,48 +11,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
-const zod_1 = require("zod");
 const prisma = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
-const Todo = zod_1.z.object({
-    tid: zod_1.z.number().int(),
-    id: zod_1.z.string(),
-    task: zod_1.z.string().min(1),
-    complete: zod_1.z.boolean(),
-});
 router.get("/", (req, res) => {
     res.send("hey you are update");
 });
-router.post("/true", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { tid } = req.body;
-    try {
-        const updatedTodo = yield markTaskAsComplete(tid);
-        console.log("Result:", updatedTodo);
-        res.status(200).json(updatedTodo);
-    }
-    catch (err) {
-        console.error("Unable to update Todo:", err);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-}));
-router.post("/delete", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { tid } = req.body;
-    try {
-        const deletedTodo = yield deleteTask(tid);
-        console.log("Result:", deletedTodo);
-        res.status(200).json(deletedTodo);
-    }
-    catch (err) {
-        console.error("Unable to delete Todo:", err);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-}));
 function markTaskAsComplete(tid) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const updatedTodo = yield prisma.todo.update({
                 where: {
-                    tid: tid,
+                    tid,
                 },
                 data: {
                     complete: true,
@@ -62,26 +31,38 @@ function markTaskAsComplete(tid) {
             return updatedTodo;
         }
         catch (err) {
+            if (err.code === "P2025") {
+                console.error("Task not found:", err);
+                throw new Error(`Task with ID ${tid} not found.`);
+            }
             console.error("Error updating task:", err);
             throw err;
         }
     });
 }
-function deleteTask(tid) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const deletedTodo = yield prisma.todo.delete({
-                where: {
-                    tid: tid,
-                },
-            });
-            console.log("Task deleted:", deletedTodo);
-            return deletedTodo;
-        }
-        catch (err) {
-            console.error("Error deleting task:", err);
-            throw err;
-        }
-    });
-}
+router.put("/update/complete", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { tid } = req.body;
+        const updatedTodo = yield markTaskAsComplete(tid);
+        res.status(200).json(updatedTodo);
+    }
+    catch (err) {
+        res.status(400).json({ error: err.message || "Failed to update task" });
+    }
+}));
+router.delete("/delete/:tid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { tid } = req.params;
+    try {
+        const deletedTodo = yield prisma.todo.delete({
+            where: {
+                tid: Number(tid),
+            },
+        });
+        res.status(200).json({ message: "Todo deleted successfully!" });
+    }
+    catch (err) {
+        console.error("Unable to delete Todo:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}));
 exports.default = router;

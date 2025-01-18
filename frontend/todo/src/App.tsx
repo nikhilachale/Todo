@@ -1,54 +1,85 @@
 import { useState, useEffect } from "react";
-import Header from "./assets/Components/Header";
-import Input from "./assets/Components/Input";
+
+import axios from "axios";
 import { TodoProvider } from "./contexts/todoContext";
 import { TodosInterface } from "./contexts/todoContext";
-import TodoItem from "./assets/Components/Todoitem";
+import TodoItem from "./Components/Todoitem";
+import Header from "./Components/Header";
+import Input from "./Components/Input";
+
 
 function App() {
-  const [todos, settodos] = useState<TodosInterface[]>([]);
 
-  const addTodo = (todo: TodosInterface) => {
-    settodos((prev) => [...prev, { ...todo }]); // Fixed `Date.now()`
-  };
+  const [Todos, setTodos] = useState<TodosInterface[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const completeTodo = (id: number) => {
-    settodos((prev) =>
-      prev.map((prevTodo) =>
-        prevTodo.id === id
-          ? { ...prevTodo, complete: !prevTodo.complete } // Fixed comparison and field update
-          : prevTodo
-      )
-    );
-  };
-
-  const deleteTodo = (id: number) => {
-    settodos((prev) => prev.filter((prevTodo) => prevTodo.id !== id));
-  };
-
-  // Load todos from localStorage
   useEffect(() => {
-    const storedTodos = localStorage.getItem("todos");
-    if (storedTodos) {
-      const parsedTodos = JSON.parse(storedTodos);
-      if (Array.isArray(parsedTodos)) {
-        settodos(parsedTodos);
+    const fetchTodos = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/add/todos");
+        setTodos(response.data); // Update the state with fetched todos
+        console.log("data fetched"+ Todos)
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching todos:", err);
+        setError("Unable to fetch todos. Please try again.");
+        setLoading(false);
       }
-    }
-  }, []);
+    };
 
-  // Save todos to localStorage whenever they change
-  useEffect(() => {
-    if (todos.length > 0) {
-      localStorage.setItem("todos", JSON.stringify(todos));
+    fetchTodos();
+  }, [Todos]);
+
+  if (loading) {
+    return <div>Loading todos...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+  
+  // const addTodo = (todo: TodosInterface) => {
+
+
+
+  //   settodos((prev) => [...prev, { ...todo }]); // Fixed `Date.now()`
+  // };
+
+
+  const completeTodo = async (tid: number) => {
+    try {
+      console.log("Marking task as complete, ID:", tid);
+  
+      const response = await axios.put(`http://localhost:3000/update/update/complete`, {
+        tid, // Passing tid in the request body
+      });
+  
+      console.log("Todo completed:", response.data);
+
+    } catch (error: any) {
+      console.error("Error completing todo:", error);
+      const message = error.response?.data?.error || "Failed to complete the todo. Please try again.";
+      alert(message);
     }
-  }, [todos]);
+  };
+  const deleteTodo = async (id: Number) => {
+    try {
+
+      const response = await axios.delete(`http://localhost:3000/update/delete/${id}`);
+      console.log("Todo deleted:", response.data);
+
+    } catch (error) {
+      console.error("Error deleting todo:", error);
+      alert("Failed to delete the todo. Please try again.");
+    }
+  };
 
   return (
     <TodoProvider
       value={{
-        todos,
-        addTodo,
+        
+        
         completeTodo,
         deleteTodo,
       }}
@@ -59,8 +90,9 @@ function App() {
       <Input />
       <div className="flex flex-wrap gap-y-3">
         {/* Loop through todos and render TodoItem for each */}
-        {todos.map((todo) => (
+        {Todos.map((todo) => (
           <div key={todo.id} className="w-full">
+            
             <TodoItem todo={todo} />
           </div>
         ))}

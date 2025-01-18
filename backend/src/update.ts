@@ -1,90 +1,82 @@
 import { Router, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { z } from 'zod';
+
 const prisma = new PrismaClient();
 const router = Router();
 
+// const Todo = z.object({
+//   tid: z.number().int(), // Ensure tid is an integer
+//   id: z.string(), // Assuming id is a string or a Date string
+//   task: z.string().min(1), // Ensure task is a non-empty string
+//   complete: z.boolean(), // Boolean indicating task completion
+// });
 
-const Todo = z.object({
-    tid: z.number().int(), // Ensure tid is an integer
-    id: z.string(), // Assuming id is a string or a Date string
-    task: z.string().min(1), // Ensure task is a non-empty string
-    complete: z.boolean(), // Boolean indicating task completion
-  });
-  
-
-  // for testing purpose only
-  router.get("/", (req: Request, res: Response) => {
-    res.send("hey you are update");
-  });
-  
-  
-  router.post("/true", async (req: Request, res: Response) => {
-    const { tid } = req.body;
-    try {
-      const updatedTodo = await markTaskAsComplete(tid);
-      console.log("Result:", updatedTodo);
-      res.status(200).json(updatedTodo);
-    } catch (err) {
-      console.error("Unable to update Todo:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
-  });
+// for testing purpose only
+router.get("/", (req: Request, res: Response) => {
+  res.send("hey you are update");
+});
 
 
-  // Route to delete todos 
-  router.post("/delete", async (req: Request, res: Response) => {
-    const { tid } = req.body;
-    try {
-      const deletedTodo = await deleteTask(tid);
-      console.log("Result:", deletedTodo);
-      res.status(200).json(deletedTodo);
-    } catch (err) {
-      console.error("Unable to delete Todo:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
-  });
 
 
-  // Function to update data 
+// function to mark task complete 
 async function markTaskAsComplete(tid: number) {
-    try {
-      const updatedTodo = await prisma.todo.update({
-        where: {
-          tid: tid, // The primary key of the task to update
-        },
-        data: {
-          complete: true, // Update the 'complete' field to true
-        },
-      });
-  
-      console.log("Task marked as complete:", updatedTodo);
-      return updatedTodo; // Return the updated Todo to the caller
-    } catch (err) {
-      console.error("Error updating task:", err);
-      throw err;
+  try {
+    const updatedTodo = await prisma.todo.update({
+      where: {
+        tid,
+      },
+      data: {
+        complete: true,
+      },
+    });
+
+    console.log("Task marked as complete:", updatedTodo);
+    return updatedTodo;
+  } catch (err: any) {
+    if (err.code === "P2025") {
+      console.error("Task not found:", err);
+      throw new Error(`Task with ID ${tid} not found.`);
     }
+    console.error("Error updating task:", err);
+    throw err;
   }
+}
+//router to mark complete 
 
+router.put("/update/complete", async (req: Request, res: Response) => {
+  try {
+    const { tid } = req.body; // Extract tid from the request body
 
+   
 
-// Function to delete a task 
-async function deleteTask(tid: number) {
-    try {
-      const deletedTodo = await prisma.todo.delete({
-        where: {
-          tid: tid, // The primary key of the task to delete
-        },
-      });
-  
-      console.log("Task deleted:", deletedTodo);
-      return deletedTodo; // Return the deleted Todo
-    } catch (err) {
-      console.error("Error deleting task:", err);
-      throw err; // Re-throw error
-    }
+    const updatedTodo = await markTaskAsComplete(tid);
+    res.status(200).json(updatedTodo);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || "Failed to update task" });
   }
-  
+});
 
 
-  export default router;
+// Route to delete todos
+router.delete("/delete/:tid", async (req: Request, res: Response) => {
+  const { tid } = req.params;
+
+ 
+  try {
+    const deletedTodo = await prisma.todo.delete({
+      where: {
+        tid: Number(tid), // Delete by 'tid' (integer)
+      },
+    });
+    res.status(200).json({ message: "Todo deleted successfully!" });
+  } catch (err) {
+    console.error("Unable to delete Todo:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+
+export default router;

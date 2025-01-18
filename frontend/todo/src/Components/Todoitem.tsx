@@ -1,11 +1,16 @@
-import { TodosInterface, useTodoContext } from "../../contexts/todoContext";
+import { TodosInterface, useTodoContext } from "../contexts/todoContext";
 
 interface TodoItemProps {
   todo: TodosInterface;
 }
 
+
+
 function TodoItem({ todo }: TodoItemProps) {
   const { completeTodo, deleteTodo } = useTodoContext();
+
+
+
 
   return (
     <div className="flex justify-center items-center py-4">
@@ -18,7 +23,7 @@ function TodoItem({ todo }: TodoItemProps) {
           type="checkbox"
           className="cursor-pointer transition-all duration-300 transform scale-110 hover:scale-125"
           checked={todo.complete}
-          onChange={() => completeTodo(todo.id)}
+          onChange={() => completeTodo(todo.tid)}
         />
         <div className="flex flex-col flex-grow">
           <div
@@ -31,7 +36,7 @@ function TodoItem({ todo }: TodoItemProps) {
         </div>
         <button
           className="text-red-600 hover:text-red-800 transition-colors duration-200 mt-2 sm:mt-0"
-          onClick={() => deleteTodo(todo.id)}
+          onClick={() => deleteTodo(todo.tid)}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

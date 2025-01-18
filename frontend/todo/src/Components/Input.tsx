@@ -1,26 +1,57 @@
 import { useState } from "react";
-import { useTodoContext } from "../contexts/todoContext";
+import axios from "axios";
+// import { useTodoContext } from "../contexts/todoContext";
 
 
 function Input() {
   const [task, setTask] = useState("");
 
-  const { addTodo } = useTodoContext();
+  // const { addTodo } = useTodoContext();
 
-  const add = (e: React.FormEvent) => {
+  // const add = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!task) return;
+
+
+  //   addTodo({
+  //     id: Date.now(), // Placeholder
+  //     task,
+  //     complete: false, // Default value
+  //   });
+
+  //   setTask(""); // Clear input after adding
+  //   console.log("added");
+  // };
+
+
+  
+  const add = async(e: React.FormEvent) => {
     e.preventDefault();
-    if (!task) return;
+    if (!task)
+      return <div>enter task</div>
 
-    addTodo({
-      id: Date.now(), // Placeholder
-      task,
-      complete: false, // Default value
-    });
+    
+    try {
+     await axios.post("http://localhost:3000/add/todos", {
+        id: Date.now().toString(),
+        task,
+        complete: false,
+      })
+      console.log("sent the taks to the database")
+    }
+    catch (err) {
+      console.error("Failed to add task:", err);
+    }
+    finally{
+      console.log("taks"+ task +" : added" );
+      setTask("")
+    }
 
-    setTask(""); // Clear input after adding
-    console.log("added");
-  };
 
+
+
+
+  }
   return (
     <div className="flex justify-center items-center py-6">
       <div className="bg-white w-full md:w-4/5 lg:w-3/4 p-6 flex flex-col sm:flex-row items-center justify-between rounded-lg shadow-xl transition-all duration-300 hover:shadow-2xl hover:bg-blue-50">

@@ -16,9 +16,15 @@ const client_1 = require("@prisma/client");
 const express_1 = __importDefault(require("express"));
 const todos_1 = __importDefault(require("./todos"));
 const update_1 = __importDefault(require("./update"));
+const cors_1 = __importDefault(require("cors"));
 const prisma = new client_1.PrismaClient();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use((0, cors_1.default)({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+}));
 app.get("/", (req, res) => {
     res.send("Hey, you connected!");
 });

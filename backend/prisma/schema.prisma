@@ -23,7 +23,7 @@ model Nikhil {
 
 model Todo {
   tid      Int      @id @default(autoincrement())
-  id       DateTime
+  id       String   @unique
   task     String
   complete Boolean  @default(false)
 }
